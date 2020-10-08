@@ -59,6 +59,20 @@ class Invocation:
 
         self.invocation_proto = None
 
+    def merge(self, invocation):
+        fieldmask = google.protobuf.field_mask_pb2.FieldMask()
+        for f in invocation.ListFields():
+            fieldmask.paths.append(f[0].name)
+
+        mir = rsu.MergeInvocationRequest(
+                request_id=str(uuid.uuid4()),
+                invocation=invocation,
+                update_mask=fieldmask,
+                authorization_token=self.auth_token,
+                )
+        return self.stub.MergeInvocation(mir)
+
+
     def open(self):
         i = inv.Invocation()
         i.id.invocation_id = self.invocation_id
@@ -86,7 +100,7 @@ class Invocation:
 
     def close(self):
         fin = rsu.FinalizeInvocationRequest(
-                name=f'invocation/{self.invocation_id}',
+                name=f'invocations/{self.invocation_id}',
                 authorization_token=self.auth_token
                 )
         return self.stub.FinalizeInvocation(fin)
