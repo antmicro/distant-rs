@@ -1,4 +1,4 @@
-import grpc, uuid
+import grpc, uuid, platform
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
@@ -45,4 +45,49 @@ def get_invocation(uuid):
     request = rs.GetInvocationRequest(name=f'invocations/{uuid}')
 
     return stub.GetInvocation(request=request, metadata=fieldmask)
+
+class Invocation:
+    def __init__(self, project_id='292154118698', invocation_id=None, auth_token=None):
+        self.channel = get_grpcs_channel()
+        self.invocation_id = invocation_id or str(uuid.uuid4())
+        self.auth_token = auth_token or str(uuid.uuid4())
+        self.stub = rsu_grpc.ResultStoreUploadStub(self.channel)
+
+        self.user = 'distant-rs'
+        self.hostname = platform.node()
+        self.project_id = project_id
+
+        self.invocation_proto = None
+
+    def open(self):
+        i = inv.Invocation()
+        i.id.invocation_id = self.invocation_id
+
+        i.status_attributes.status = 1
+
+        i.timing.start_time.GetCurrentTime()
+
+        i.invocation_attributes.project_id = self.project_id
+        i.invocation_attributes.users.append(self.user)
+        i.invocation_attributes.labels.append('distant-rs')
+
+        i.workspace_info.hostname = self.hostname
+
+        cir = rsu.CreateInvocationRequest(
+                request_id=str(uuid.uuid4()),
+                invocation_id=self.invocation_id,
+                invocation=i,
+                authorization_token=self.auth_token
+                )
+
+        cir_request = self.stub.CreateInvocation(cir)
+        self.invocation_proto = i
+        return cir_request
+
+    def close(self):
+        fin = rsu.FinalizeInvocationRequest(
+                name=f'invocation/{self.invocation_id}',
+                authorization_token=self.auth_token
+                )
+        return self.stub.FinalizeInvocation(fin)
 
