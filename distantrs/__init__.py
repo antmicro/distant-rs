@@ -72,10 +72,19 @@ class Invocation:
                 )
         return self.stub.MergeInvocation(mir)
 
+    def update_status(self, code):
+        i = inv.Invocation()
+        i.id.invocation_id = self.invocation_id
+        i.name = f'invocations/{self.invocation_id}'
+        i.status_attributes.status = code
+
+        return self.merge(i)
+        
 
     def open(self):
         i = inv.Invocation()
         i.id.invocation_id = self.invocation_id
+        i.name = f'invocations/{self.invocation_id}'
 
         i.status_attributes.status = 1
 
