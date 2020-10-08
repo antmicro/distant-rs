@@ -24,13 +24,15 @@ stub = rs_grpc.ResultStoreDownloadStub(ch)
 
 fieldmask = [('X-Goog-FieldMask'.lower(), 'name,id,status_attributes,timing,invocation_attributes,workspace_info,properties,files,coverage_summaries,aggregate_coverage,file_processing_errors')]
 
-try:
-    iid = sys.argv[1]
-except:
-    sys.exit(1)
 
-r = rs.GetInvocationRequest(name=f"invocations/{iid}")
+if __name__ == '__main__':
+    try:
+        iid = sys.argv[1]
+    except:
+        sys.exit(1)
 
-invocation = stub.GetInvocation(request=r, metadata=fieldmask)
+    r = rs.GetInvocationRequest(name=f"invocations/{iid}")
 
-print(invocation)
+    invocation = stub.GetInvocation(request=r, metadata=fieldmask)
+
+    print(invocation)
