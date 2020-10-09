@@ -1,4 +1,4 @@
-import grpc, uuid, platform, datetime, requests
+import grpc, uuid, platform, datetime, requests, os
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
@@ -10,6 +10,8 @@ from distantrs.proto.google.devtools.resultstore.v2 import (
         resultstore_upload_pb2_grpc as rsu_grpc,
         invocation_pb2 as inv,
         invocation_pb2_grpc as inv_grpc,
+        file_pb2 as inv_f,
+        file_pb2_grpc as inv_f_grpc,
         )
 from google.protobuf import (
         timestamp_pb2 as ts,
@@ -60,7 +62,13 @@ def get_invocation(uuid):
     return stub.GetInvocation(request=request, metadata=fieldmask)
 
 class Invocation:
-    def __init__(self, project_id=None, invocation_id=None, auth_token=None):
+    def __init__(
+            self, 
+            project_id=None,
+            bucket_name=None,
+            invocation_id=None, 
+            auth_token=None
+            ):
         self.channel = get_grpcs_channel()
         self.invocation_id = invocation_id or str(uuid.uuid4())
         self.auth_token = auth_token or str(uuid.uuid4())
@@ -68,12 +76,20 @@ class Invocation:
 
         self.project_id = project_id or infer_project_id()
 
+        self.bucket_name = bucket_name or os.environ['DISTANT_RS_BUCKET']
         self.storage_client = storage.Client()
+        self.bucket = self.storage_client.bucket(self.bucket_name)
 
         self.user = 'distant-rs'
         self.hostname = platform.node()
 
         self.invocation_proto = None
+
+    def __minimal_invocation(self):
+        i = inv.Invocation()
+        i.id.invocation_id = self.invocation_id
+        i.name = f'invocations/{self.invocation_id}'
+        return i
 
     def merge(self, invocation):
         fieldmask = fm.FieldMask()
@@ -89,12 +105,26 @@ class Invocation:
         return self.stub.MergeInvocation(mir)
 
     def update_status(self, code):
-        i = inv.Invocation()
-        i.id.invocation_id = self.invocation_id
-        i.name = f'invocations/{self.invocation_id}'
+        i = self.__minimal_invocation()
         i.status_attributes.status = code
-
         return self.merge(i)
+
+    def send_file(self, name, path):
+        blob_path = f'{self.invocation_id}/{name}'
+        gs_path = f'gs://{self.bucket_name}/{blob_path}'
+
+        blob = self.bucket.blob(blob_path)
+        blob.upload_from_filename(path)
+
+        f_proto = inv_f.File(
+                uid=str(uuid.uuid4()),
+                uri=gs_path
+                )
+
+        i = self.__minimal_invocation()
+        i.files.append(f_proto)
+        self.merge(i)
+        
         
     def open(self, timeout=30):
         i = inv.Invocation()
