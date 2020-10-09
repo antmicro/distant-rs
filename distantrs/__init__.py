@@ -1,4 +1,4 @@
-import grpc, uuid, platform
+import grpc, uuid, platform, datetime
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
@@ -9,6 +9,10 @@ from distantrs.proto.google.devtools.resultstore.v2 import (
         resultstore_upload_pb2_grpc as rsu_grpc,
         invocation_pb2 as inv,
         invocation_pb2_grpc as inv_grpc,
+        )
+from google.protobuf import (
+        timestamp_pb2 as ts,
+        field_mask_pb2 as fm,
         )
 
 RESULT_STORE_URL = "resultstore.googleapis.com"
@@ -60,7 +64,7 @@ class Invocation:
         self.invocation_proto = None
 
     def merge(self, invocation):
-        fieldmask = google.protobuf.field_mask_pb2.FieldMask()
+        fieldmask = fm.FieldMask()
         for f in invocation.ListFields():
             fieldmask.paths.append(f[0].name)
 
@@ -80,8 +84,7 @@ class Invocation:
 
         return self.merge(i)
         
-
-    def open(self):
+    def open(self, timeout=30):
         i = inv.Invocation()
         i.id.invocation_id = self.invocation_id
         i.name = f'invocations/{self.invocation_id}'
@@ -96,11 +99,15 @@ class Invocation:
 
         i.workspace_info.hostname = self.hostname
 
+        t = ts.Timestamp()
+        t.FromDatetime(datetime.datetime.now() + datetime.timedelta(minutes=timeout))
+
         cir = rsu.CreateInvocationRequest(
                 request_id=str(uuid.uuid4()),
                 invocation_id=self.invocation_id,
                 invocation=i,
-                authorization_token=self.auth_token
+                authorization_token=self.auth_token,
+                auto_finalize_time=t,
                 )
 
         cir_request = self.stub.CreateInvocation(cir)
