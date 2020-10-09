@@ -2,6 +2,7 @@ import grpc, uuid, platform, datetime
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
+from google.cloud import storage
 from distantrs.proto.google.devtools.resultstore.v2 import (
         resultstore_download_pb2 as rs,
         resultstore_download_pb2_grpc as rs_grpc,
@@ -56,6 +57,8 @@ class Invocation:
         self.invocation_id = invocation_id or str(uuid.uuid4())
         self.auth_token = auth_token or str(uuid.uuid4())
         self.stub = rsu_grpc.ResultStoreUploadStub(self.channel)
+
+        self.storage_client = storage.Client()
 
         self.user = 'distant-rs'
         self.hostname = platform.node()
