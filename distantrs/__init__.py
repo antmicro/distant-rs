@@ -91,10 +91,11 @@ class Invocation:
         i.name = f'invocations/{self.invocation_id}'
         return i
 
-    def merge(self, invocation):
-        fieldmask = fm.FieldMask()
-        for f in invocation.ListFields():
-            fieldmask.paths.append(f[0].name)
+    def merge(self, invocation, fieldmask=None):
+        if fieldmask is None:
+            fieldmask = fm.FieldMask()
+            for f in invocation.ListFields():
+                fieldmask.paths.append(f[0].name)
 
         mir = rsu.MergeInvocationRequest(
                 request_id=str(uuid.uuid4()),
@@ -107,6 +108,12 @@ class Invocation:
     def update_status(self, code):
         i = self.__minimal_invocation()
         i.status_attributes.status = code
+        return self.merge(i)
+
+    def update_duration(self, seconds):
+        i = self.__minimal_invocation()
+        i.timing.CopyFrom(self.invocation_proto.timing)
+        i.timing.duration.FromSeconds(seconds)
         return self.merge(i)
 
     def send_file(self, name, path):
