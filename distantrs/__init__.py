@@ -12,6 +12,8 @@ from distantrs.proto.google.devtools.resultstore.v2 import (
         invocation_pb2_grpc as inv_grpc,
         file_pb2 as inv_f,
         file_pb2_grpc as inv_f_grpc,
+        target_pb2 as tgt,
+        target_pb2_grpc as tgt_grpc,
         )
 from google.protobuf import (
         timestamp_pb2 as ts,
@@ -134,7 +136,23 @@ class Invocation:
         i = self.__minimal_invocation()
         i.files.append(f_proto)
         self.merge(i)
-        
+
+    def announce_target(self, name):
+        t_id = str(uuid.uuid4())
+        t = tgt.Target()
+        t.id.invocation_id = self.invocation_id
+        t.id.target_id = name
+
+        ctr = rsu.CreateTargetRequest(
+                request_id=str(uuid.uuid4()),
+                parent=self.invocation_path,
+                target_id=name,
+                authorization_token=self.auth_token,
+                target=t,
+                )
+
+        ctr_request = self.stub.CreateTarget(ctr)
+        return ctr_request
         
     def open(self, timeout=30):
         i = inv.Invocation()
