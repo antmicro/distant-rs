@@ -71,6 +71,7 @@ class Invocation:
             ):
         self.channel = get_grpcs_channel()
         self.invocation_id = invocation_id or str(uuid.uuid4())
+        self.invocation_path = f'invocations/{self.invocation_id}'
         self.auth_token = auth_token or str(uuid.uuid4())
         self.stub = rsu_grpc.ResultStoreUploadStub(self.channel)
 
@@ -88,7 +89,7 @@ class Invocation:
     def __minimal_invocation(self):
         i = inv.Invocation()
         i.id.invocation_id = self.invocation_id
-        i.name = f'invocations/{self.invocation_id}'
+        i.name = self.invocation_path
         return i
 
     def merge(self, invocation, fieldmask=None):
@@ -103,7 +104,9 @@ class Invocation:
                 update_mask=fieldmask,
                 authorization_token=self.auth_token,
                 )
-        return self.stub.MergeInvocation(mir)
+        mir_request = self.stub.MergeInvocation(mir)
+        self.invocation_proto.MergeFrom(invocation)
+        return mir_request
 
     def update_status(self, code):
         i = self.__minimal_invocation()
@@ -136,7 +139,7 @@ class Invocation:
     def open(self, timeout=30):
         i = inv.Invocation()
         i.id.invocation_id = self.invocation_id
-        i.name = f'invocations/{self.invocation_id}'
+        i.name = self.invocation_path
 
         i.status_attributes.status = 1
 
@@ -165,7 +168,7 @@ class Invocation:
 
     def close(self):
         fin = rsu.FinalizeInvocationRequest(
-                name=f'invocations/{self.invocation_id}',
+                name=self.invocation_path,
                 authorization_token=self.auth_token
                 )
         return self.stub.FinalizeInvocation(fin)
