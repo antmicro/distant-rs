@@ -1,4 +1,4 @@
-import grpc, uuid, platform, datetime
+import grpc, uuid, platform, datetime, requests
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
@@ -36,6 +36,14 @@ def get_grpcs_channel():
 
     return channel
 
+def infer_project_id():
+    r = requests.get(
+            'http://metadata.google.internal/computeMetadata/v1/project/numeric-project-id',
+            headers={'Metadata-Flavor':'Google'},
+            )
+    r.raise_for_status()
+    return r.text
+
 def get_invocation(uuid):
     channel = get_grpcs_channel()
     fields = []
@@ -52,17 +60,18 @@ def get_invocation(uuid):
     return stub.GetInvocation(request=request, metadata=fieldmask)
 
 class Invocation:
-    def __init__(self, project_id='292154118698', invocation_id=None, auth_token=None):
+    def __init__(self, project_id=None, invocation_id=None, auth_token=None):
         self.channel = get_grpcs_channel()
         self.invocation_id = invocation_id or str(uuid.uuid4())
         self.auth_token = auth_token or str(uuid.uuid4())
         self.stub = rsu_grpc.ResultStoreUploadStub(self.channel)
 
+        self.project_id = project_id or infer_project_id()
+
         self.storage_client = storage.Client()
 
         self.user = 'distant-rs'
         self.hostname = platform.node()
-        self.project_id = project_id
 
         self.invocation_proto = None
 
