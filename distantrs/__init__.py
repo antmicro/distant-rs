@@ -142,6 +142,10 @@ class Invocation:
         t = tgt.Target()
         t.id.invocation_id = self.invocation_id
         t.id.target_id = name
+        t.status_attributes.status = 1
+        t.timing.start_time.GetCurrentTime()
+        t.target_attributes.type = 2
+        t.visible = True
 
         ctr = rsu.CreateTargetRequest(
                 request_id=str(uuid.uuid4()),
