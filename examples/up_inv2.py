@@ -4,6 +4,7 @@ from pathlib import Path
 i = Invocation()
 i.open()
 i.announce_target("funky_town")
+i.finalize_target("funky_town", 0)
 i.update_status(5)
 i.send_file('build.log', "{}/build.log".format(str(Path.home())))
 i.close()

@@ -86,6 +86,8 @@ class Invocation:
         self.user = 'distant-rs'
         self.hostname = platform.node()
 
+        self.targets = {}
+
         self.invocation_proto = None
 
     def __minimal_invocation(self):
@@ -138,10 +140,10 @@ class Invocation:
         self.merge(i)
 
     def announce_target(self, name):
-        t_id = str(uuid.uuid4())
         t = tgt.Target()
         t.id.invocation_id = self.invocation_id
         t.id.target_id = name
+        t.name = f'invocations/{self.invocation_id}/targets/{name}'
         t.status_attributes.status = 1
         t.timing.start_time.GetCurrentTime()
         t.target_attributes.type = 2
@@ -156,7 +158,33 @@ class Invocation:
                 )
 
         ctr_request = self.stub.CreateTarget(ctr)
+        self.targets[name] = t
         return ctr_request
+
+    def finalize_target(self, name, success):
+        fieldmask = fm.FieldMask()
+        fieldmask.paths.MergeFrom(['timing.duration', 'status_attributes.status'])
+
+        t = self.targets[name]
+        t.id.target_id = name
+
+        if success:
+            t.status_attributes.status = 5
+        else:
+            t.status_attributes.status = 6
+
+        t.timing.duration.FromTimedelta(
+                datetime.datetime.now() - t.timing.start_time.ToDatetime())
+
+        mtr = rsu.MergeTargetRequest(
+                target=t,
+                update_mask=fieldmask,
+                authorization_token=self.auth_token,
+                create_if_not_found=False
+                )
+        mtr_request = self.stub.MergeTarget(mtr)
+        self.targets[name] = t
+        return mtr_request
         
     def open(self, timeout=30):
         i = inv.Invocation()
