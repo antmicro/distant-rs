@@ -210,8 +210,26 @@ class Invocation:
         ctr_request = self.stub.CreateTarget(ctr)
         self.targets[name] = t
 
+        conf_id = 'default'
 
-        return ctr_request 
+        ct = ctgt.ConfiguredTarget()
+        ct.name = f'{self.invocation_path}/targets/{name}/configuredTargets/{conf_id}'
+        ct.id.invocation_id = self.invocation_id
+        ct.id.target_id = name
+        ct.id.configuration_id = conf_id
+        ct.status_attributes.status = 1
+        ct.timing.start_time.GetCurrentTime()
+
+        cctr = rsu.CreateConfiguredTargetRequest(
+                request_id=str(uuid.uuid4()),
+                parent=t.name,
+                config_id=conf_id,
+                configured_target=ct,
+                authorization_token=self.auth_token
+                )
+        cctr_request = self.stub.CreateConfiguredTarget(cctr)
+
+        return ctr_request, cctr_request
 
     def finalize_target(self, name, success):
         fieldmask = fm.FieldMask()
