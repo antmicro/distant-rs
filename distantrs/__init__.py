@@ -96,11 +96,14 @@ class Invocation:
         i.name = self.invocation_path
         return i
 
-    def merge(self, invocation, fieldmask=None):
-        if fieldmask is None:
-            fieldmask = fm.FieldMask()
+    def merge(self, invocation, fieldmask_list=None):
+        fieldmask = fm.FieldMask()
+
+        if fieldmask_list is None:
             for f in invocation.ListFields():
                 fieldmask.paths.append(f[0].name)
+        else:
+            fieldmask.paths.MergeFrom(fieldmask_list)
 
         mir = rsu.MergeInvocationRequest(
                 request_id=str(uuid.uuid4()),
@@ -117,10 +120,16 @@ class Invocation:
         i.status_attributes.status = code
         return self.merge(i)
 
-    def update_duration(self, seconds):
+    def update_duration(self, seconds=None):
         i = self.__minimal_invocation()
         i.timing.CopyFrom(self.invocation_proto.timing)
-        i.timing.duration.FromSeconds(seconds)
+
+        if seconds is None:
+            i.timing.duration.FromTimedelta(
+                    datetime.datetime.now() - i.timing.start_time.ToDatetime())
+        else:
+            i.timing.duration.FromSeconds(seconds)
+
         return self.merge(i)
 
     def send_file(self, name, path):
@@ -227,6 +236,8 @@ class Invocation:
         return cir_request
 
     def close(self):
+        self.update_duration()
+
         fin = rsu.FinalizeInvocationRequest(
                 name=self.invocation_path,
                 authorization_token=self.auth_token
