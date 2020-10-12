@@ -9,13 +9,10 @@ from distantrs.proto.google.devtools.resultstore.v2 import (
         resultstore_upload_pb2 as rsu,
         resultstore_upload_pb2_grpc as rsu_grpc,
         invocation_pb2 as inv,
-        invocation_pb2_grpc as inv_grpc,
         file_pb2 as inv_f,
-        file_pb2_grpc as inv_f_grpc,
         target_pb2 as tgt,
-        target_pb2_grpc as tgt_grpc,
+        configured_target_pb2 as ctgt,
         configuration_pb2 as inv_conf,
-        configuration_pb2_grpc as inv_conf_grpc,
         )
 from google.protobuf import (
         timestamp_pb2 as ts,
