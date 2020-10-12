@@ -132,7 +132,7 @@ class Invocation:
 
         return self.merge(i)
 
-    def send_file(self, name, path):
+    def __upload_file_gen_proto(self, name, path):
         blob_path = f'{self.invocation_id}/{name}'
         gs_path = f'gs://{self.bucket_name}/{blob_path}'
 
@@ -144,9 +144,13 @@ class Invocation:
                 uri=gs_path
                 )
 
+        return f_proto
+
+    def send_file(self, name, path):
+        f_proto = self.__upload_file_gen_proto(name, path)
         i = self.__minimal_invocation()
         i.files.append(f_proto)
-        self.merge(i)
+        return self.merge(i)
 
     def announce_target(self, name):
         t = tgt.Target()
