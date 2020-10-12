@@ -159,7 +159,9 @@ class Invocation:
 
         ctr_request = self.stub.CreateTarget(ctr)
         self.targets[name] = t
-        return ctr_request
+
+
+        return ctr_request 
 
     def finalize_target(self, name, success):
         fieldmask = fm.FieldMask()
@@ -184,7 +186,15 @@ class Invocation:
                 )
         mtr_request = self.stub.MergeTarget(mtr)
         self.targets[name] = t
-        return mtr_request
+
+        ftr = rsu.FinalizeTargetRequest(
+                name=t.name,
+                authorization_token=self.auth_token
+                )
+
+        ftr_request = self.stub.FinalizeTarget(ftr)
+
+        return mtr_request, ftr_request
         
     def open(self, timeout=30):
         i = inv.Invocation()
