@@ -236,7 +236,6 @@ class Invocation:
         fieldmask.paths.MergeFrom(['timing.duration', 'status_attributes.status'])
 
         t = self.targets[name]
-        t.id.target_id = name
 
         if success:
             t.status_attributes.status = 5
