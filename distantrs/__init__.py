@@ -152,6 +152,26 @@ class Invocation:
         i.files.append(f_proto)
         return self.merge(i)
 
+    def send_file_target(self, target_name, file_name, file_path):
+        f_proto = self.__upload_file_gen_proto(f'{target_name}/{file_name}', file_path)
+        fieldmask = fm.FieldMask()
+        fieldmask.paths.MergeFrom(['files'])
+
+        t = self.targets[target_name]
+        t.files.append(f_proto)
+
+        mtr = rsu.MergeTargetRequest(
+                target=t,
+                update_mask=fieldmask,
+                authorization_token=self.auth_token,
+                create_if_not_found=False
+                )
+        mtr_request = self.stub.MergeTarget(mtr)
+        self.targets[target_name] = t
+
+        return mtr_request
+
+
     def announce_target(self, name):
         t = tgt.Target()
         t.id.invocation_id = self.invocation_id
