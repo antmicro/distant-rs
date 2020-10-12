@@ -14,6 +14,8 @@ from distantrs.proto.google.devtools.resultstore.v2 import (
         file_pb2_grpc as inv_f_grpc,
         target_pb2 as tgt,
         target_pb2_grpc as tgt_grpc,
+        configuration_pb2 as inv_conf,
+        configuration_pb2_grpc as inv_conf_grpc,
         )
 from google.protobuf import (
         timestamp_pb2 as ts,
@@ -146,6 +148,24 @@ class Invocation:
 
         return f_proto
 
+    def send_configuration(self, conf_name="default"):
+        c = inv_conf.Configuration(
+                name=f'{self.invocation_path}/configs/{conf_name}'
+                )
+        c.id.invocation_id = self.invocation_id
+        c.id.configuration_id = conf_name
+        c.configuration_attributes.cpu = 'k8'
+
+        ccr = rsu.CreateConfigurationRequest(
+                request_id=str(uuid.uuid4()),
+                parent=self.invocation_path,
+                config_id=conf_name,
+                configuration=c,
+                authorization_token=self.auth_token,
+                )
+        ccr_request = self.stub.CreateConfiguration(ccr)
+        return ccr_request
+
     def send_file(self, name, path):
         f_proto = self.__upload_file_gen_proto(name, path)
         i = self.__minimal_invocation()
@@ -257,7 +277,10 @@ class Invocation:
 
         cir_request = self.stub.CreateInvocation(cir)
         self.invocation_proto = i
-        return cir_request
+
+        ccr_request = self.send_configuration()
+
+        return cir_request, ccr_request
 
     def close(self):
         self.update_duration()
