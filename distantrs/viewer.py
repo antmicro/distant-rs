@@ -5,6 +5,7 @@ class InvocationViewer:
     def __init__(self, invocation_id):
         self.channel = get_grpcs_channel()
         self.invocation_id = invocation_id
+        self.invocation_path = f'invocations/{self.invocation_id}'
         self.stub = drs.rs_grpc.ResultStoreDownloadStub(self.channel)
 
     def __get_field_mask(self, proto):
@@ -18,7 +19,6 @@ class InvocationViewer:
 
     def get_invocation(self):
         fieldmask = self.__get_field_mask(drs.inv.Invocation())
-        stub = drs.rs_grpc.ResultStoreDownloadStub(self.channel)
-        request = drs.rs.GetInvocationRequest(name=f'invocations/{self.invocation_id}')
+        request = drs.rs.GetInvocationRequest(name=self.invocation_path)
 
-        return stub.GetInvocation(request=request, metadata=fieldmask)
+        return self.stub.GetInvocation(request=request, metadata=fieldmask)
