@@ -203,7 +203,7 @@ class Invocation:
         ct.id.target_id = name
         ct.id.configuration_id = conf_id
         ct.status_attributes.status = 1
-        ct.timing.start_time.GetCurrentTime()
+        ct.timing.CopyFrom(t.timing)
 
         cctr = rsu.CreateConfiguredTargetRequest(
                 request_id=str(uuid.uuid4()),
@@ -214,9 +214,30 @@ class Invocation:
                 )
         cctr_request = self.stub.CreateConfiguredTarget(cctr)
 
-        self.targets[name] = [t, ct]
+        action_id = 'build'
+        a = inv_act.Action()
+        a.name = f'{ct.name}/actions/{action_id}'
+        a.id.invocation_id = self.invocation_id
+        a.id.target_id = name
+        a.id.configuration_id = conf_id
+        a.id.action_id = action_id
+        a.status_attributes.status = 1
+        a.timing.CopyFrom(t.timing)
+        a.build_action.SetInParent()
 
-        return ctr_request, cctr_request
+        car = rsu.CreateActionRequest(
+                request_id=str(uuid.uuid4()),
+                parent=ct.name,
+                action_id=action_id,
+                action=a,
+                authorization_token=self.auth_token
+                )
+
+        car_request = self.stub.CreateAction(car)
+
+        self.targets[name] = [t, ct, a]
+
+        return ctr_request, cctr_request, car_request
 
     def finalize_target(self, name, success):
         fieldmask = fm.FieldMask()
