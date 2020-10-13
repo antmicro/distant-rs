@@ -175,6 +175,33 @@ class Invocation:
 
         return mar_request
 
+    def add_log_to_target(self, target_name, log_path):
+        f_proto = self.__upload_file_gen_proto(f'{target_name}/test.log', log_path)
+
+        ct = self.targets[target_name][1]
+
+        action_id = 'test_log_action'
+        conf_id = 'default'
+        
+        a = inv_act.Action()
+        a.name = f'{ct.name}/actions/{action_id}'
+        a.id.invocation_id = self.invocation_id
+        a.id.target_id = target_name
+        a.id.configuration_id = conf_id
+        a.id.action_id = action_id
+        a.status_attributes.status = 1
+        a.test_action.SetInParent()
+        a.files.append(f_proto)
+
+        car = rsu.CreateActionRequest(
+                request_id=str(uuid.uuid4()),
+                parent=ct.name,
+                action_id=action_id,
+                action=a,
+                authorization_token=self.auth_token
+                )
+
+        car_request = self.stub.CreateAction(car)
 
     def announce_target(self, name):
         t = tgt.Target()
