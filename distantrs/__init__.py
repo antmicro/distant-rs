@@ -208,7 +208,6 @@ class Invocation:
                 )
 
         ctr_request = self.stub.CreateTarget(ctr)
-        self.targets[name] = t
 
         conf_id = 'default'
 
@@ -229,21 +228,29 @@ class Invocation:
                 )
         cctr_request = self.stub.CreateConfiguredTarget(cctr)
 
+        self.targets[name] = [t, ct]
+
         return ctr_request, cctr_request
 
     def finalize_target(self, name, success):
         fieldmask = fm.FieldMask()
         fieldmask.paths.MergeFrom(['timing.duration', 'status_attributes.status'])
 
-        t = self.targets[name]
+        t = self.targets[name][0]
+        ct = self.targets[name][1]
 
+        # Taken from the Status enum in common.proto
         if success:
-            t.status_attributes.status = 5
+            status_int = 5
         else:
-            t.status_attributes.status = 6
+            status_int = 6
+
+        t.status_attributes.status = status_int
+        ct.status_attributes.CopyFrom(t.status_attributes)
 
         t.timing.duration.FromTimedelta(
                 datetime.datetime.now() - t.timing.start_time.ToDatetime())
+        ct.timing.CopyFrom(t.timing)
 
         mtr = rsu.MergeTargetRequest(
                 target=t,
@@ -252,7 +259,26 @@ class Invocation:
                 create_if_not_found=False
                 )
         mtr_request = self.stub.MergeTarget(mtr)
-        self.targets[name] = t
+
+        mctr = rsu.MergeConfiguredTargetRequest(
+                request_id=str(uuid.uuid4()),
+                configured_target=ct,
+                update_mask=fieldmask,
+                authorization_token=self.auth_token,
+                create_if_not_found=False
+                )
+
+        mctr_request = self.stub.MergeConfiguredTarget(mctr)
+
+        self.targets[name][0] = t
+        self.targets[name][1] = ct
+
+        fctr = rsu.FinalizeConfiguredTargetRequest(
+                name=ct.name,
+                authorization_token=self.auth_token
+                )
+
+        fctr_request = self.stub.FinalizeConfiguredTarget(fctr)
 
         ftr = rsu.FinalizeTargetRequest(
                 name=t.name,
@@ -261,7 +287,7 @@ class Invocation:
 
         ftr_request = self.stub.FinalizeTarget(ftr)
 
-        return mtr_request, ftr_request
+        return mtr_request, mctr_request, fctr_request, ftr_request
         
     def open(self, timeout=30):
         i = inv.Invocation()
