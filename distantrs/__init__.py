@@ -117,17 +117,21 @@ class Invocation:
 
         return self.merge(i)
 
-    def __upload_file_gen_proto(self, name, path):
+    def __upload_file_gen_proto(self, name, path, uid=None):
         blob_path = f'{self.invocation_id}/{name}'
         gs_path = f'gs://{self.bucket_name}/{blob_path}'
 
         blob = self.bucket.blob(blob_path)
         blob.upload_from_filename(path)
 
+        if uid is None:
+            uid = str(uuid.uuid4())
+
         f_proto = inv_f.File(
-                uid=str(uuid.uuid4()),
-                uri=gs_path
+                uid=uid,
+                uri=gs_path,
                 )
+        f_proto.length.value = os.path.getsize(path)
 
         return f_proto
 
@@ -176,7 +180,11 @@ class Invocation:
         return mar_request
 
     def add_log_to_target(self, target_name, log_path):
-        f_proto = self.__upload_file_gen_proto(f'{target_name}/test.log', log_path)
+        f_proto = self.__upload_file_gen_proto(
+                f'{target_name}/test.log', 
+                log_path,
+                uid='test.log'
+                )
 
         ct = self.targets[target_name][1]
 
