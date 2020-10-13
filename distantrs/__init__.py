@@ -47,21 +47,6 @@ def infer_project_id():
     r.raise_for_status()
     return r.text
 
-def get_invocation(uuid):
-    channel = get_grpcs_channel()
-    fields = []
-
-    for f in inv.Invocation().DESCRIPTOR.fields_by_name:
-        fields.append(f)
-
-    fieldmask = [('X-Goog-FieldMask'.lower(), ",".join(fields))]
-
-    stub = rs_grpc.ResultStoreDownloadStub(channel)
-
-    request = rs.GetInvocationRequest(name=f'invocations/{uuid}')
-
-    return stub.GetInvocation(request=request, metadata=fieldmask)
-
 class Invocation:
     def __init__(
             self, 
