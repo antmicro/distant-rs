@@ -9,6 +9,16 @@ class InvocationViewer:
         self.stub = drs.rs_grpc.ResultStoreDownloadStub(self.channel)
 
     def __get_field_mask(self, proto, prefix=""):
+        """Returns a fieldmask with all fields from the proto message (no recursion)
+        in a form of a list of metadata ready to be used in stub request.
+
+        Example usage: stub.SayHello(request=request, metadata=fieldmask
+
+        Args:
+            proto - an instantiated protobuf message, 
+                e.g. google.protobuf.timestamp_pb2.Timestamp()
+            prefix - optional string, prefix for field names
+        """
         fields = []
 
         for f in proto.DESCRIPTOR.fields_by_name:
