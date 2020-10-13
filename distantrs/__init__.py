@@ -160,19 +160,20 @@ class Invocation:
         fieldmask = fm.FieldMask()
         fieldmask.paths.MergeFrom(['files'])
 
-        t = self.targets[target_name]
-        t.files.append(f_proto)
+        a = self.targets[target_name][2]
+        a.files.append(f_proto)
 
-        mtr = rsu.MergeTargetRequest(
-                target=t,
+        mar = rsu.MergeActionRequest(
+                request_id=str(uuid.uuid4()),
+                action=a,
                 update_mask=fieldmask,
                 authorization_token=self.auth_token,
                 create_if_not_found=False
                 )
-        mtr_request = self.stub.MergeTarget(mtr)
-        self.targets[target_name] = t
+        mar_request = self.stub.MergeAction(mar)
+        self.targets[target_name][2] = a
 
-        return mtr_request
+        return mar_request
 
 
     def announce_target(self, name):
