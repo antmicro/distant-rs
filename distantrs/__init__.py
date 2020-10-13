@@ -13,6 +13,7 @@ from distantrs.proto.google.devtools.resultstore.v2 import (
         target_pb2 as tgt,
         configured_target_pb2 as ctgt,
         configuration_pb2 as inv_conf,
+        action_pb2 as inv_act,
         )
 from google.protobuf import (
         timestamp_pb2 as ts,
