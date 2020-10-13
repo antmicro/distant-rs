@@ -29,8 +29,6 @@ class InvocationViewer:
         fieldmask_conf = self.__get_field_mask(drs.inv_conf.Configuration(), prefix="configurations.")
         fieldmask = [('X-Goog-FieldMask'.lower(), f"next_page_token,{fieldmask_conf[0][1]}")]
 
-        print(fieldmask)
-        
         request = drs.rs.ListConfigurationsRequest(
                 parent=self.invocation_path,
                 page_size=0,
