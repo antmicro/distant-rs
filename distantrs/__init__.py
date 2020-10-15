@@ -64,7 +64,7 @@ class Invocation:
         self.auth_token = auth_token or str(uuid.uuid4())
         self.stub = rsu_grpc.ResultStoreUploadStub(self.channel)
 
-        self.project_id = project_id or infer_project_id()
+        self.project_id = os.environ.get("GOOGLE_PROJECT_ID") or project_id or infer_project_id()
 
         self.bucket_name = bucket_name or os.environ['DISTANT_RS_BUCKET']
         self.storage_client = storage.Client()
