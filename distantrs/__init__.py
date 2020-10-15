@@ -30,7 +30,9 @@ def is_channel_operational(channel, timeout=3):
         return False
 
 def get_grpcs_channel():
-    credentials, _ = google.auth.default()
+    credentials, _ = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
     http_request = google.auth.transport.requests.Request()
     channel = google.auth.transport.grpc.secure_authorized_channel(
             credentials, http_request, RESULT_STORE_URL)

@@ -1,9 +1,12 @@
+import os
 from distantrs import Invocation
 from pathlib import Path
 
 example_log = "{}/build.log".format(str(Path.home())) 
 
-i = Invocation()
+project_id = os.environ.get("GOOGLE_PROJECT_ID")
+
+i = Invocation(project_id=project_id)
 i.open()
 i.announce_target("funky_town")
 i.send_file_target("funky_town", "stdout", example_log)
