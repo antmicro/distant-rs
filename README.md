@@ -19,6 +19,10 @@ The aforementioned service account must have the write access to the bucket, as 
 
 All of the parameters specified above override the values provided in the constructor of the `Invocation` class.
 
+## Examples
+
+See the [examples](examples/) directory for potential use cases of the library.
+
 ## License
 
 [Apache 2.0](LICENSE)
