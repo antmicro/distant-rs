@@ -1,19 +1,0 @@
-
-0invocations/2784fd8a-f463-4efb-be09-aaf033763293&
-$2784fd8a-f463-4efb-be09-aaf033763293SUCCESS"&
-·‹˚˚Ä¯Œ£ü£ÑÑ˙ˇˇˇˇÄà±‹¸ˇˇˇˇ*2
-292154118698kbuilderbazeldistant-bestest2instance-results-test:6
-BAZEL_BUILD_ID$2784fd8a-f463-4efb-be09-aaf033763293:
-BAZEL_COMMANDdistant-bes:
-BAZEL_SERVER_PID0:
-BAZEL_VERSION0.0.1:
-BUILD_EMBED_LABEL:#
-
-BUILD_HOSTinstance-results-test:
-
-BUILD_USERkbuilder:
-	INITIATORkokoro:
-JOB_NAMEdistant:"
-JOB_TYPECONTINUOUS_INTEGRATIONBû
-	build.logêgs://kokoro_build_logs/kokoro-sisyphus/resultstore/prod/foss-fpga-tools/fpga-tool-perf/continuous/7e385fe4-5227-4b57-97d7-d8f17acf6d8c/build.logBf
-command.profile.gzNChJjb21tYW5kLnByb2ZpbGUuZ3oSJDI3ODRmZDhhLWY0NjMtNGVmYi1iZTA5LWFhZjAzMzc2MzI5Mw8
