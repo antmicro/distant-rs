@@ -113,7 +113,7 @@ class Invocation:
 
         if seconds is None:
             i.timing.duration.FromTimedelta(
-                    datetime.datetime.now() - i.timing.start_time.ToDatetime())
+                    datetime.datetime.utcnow() - i.timing.start_time.ToDatetime())
         else:
             i.timing.duration.FromSeconds(seconds)
 
@@ -294,7 +294,7 @@ class Invocation:
         ct.status_attributes.CopyFrom(t.status_attributes)
 
         t.timing.duration.FromTimedelta(
-                datetime.datetime.now() - t.timing.start_time.ToDatetime())
+                datetime.datetime.utcnow() - t.timing.start_time.ToDatetime())
         ct.timing.CopyFrom(t.timing)
 
         mtr = rsu.MergeTargetRequest(
@@ -350,7 +350,7 @@ class Invocation:
         i.workspace_info.hostname = self.hostname
 
         t = ts.Timestamp()
-        t.FromDatetime(datetime.datetime.now() + datetime.timedelta(minutes=timeout))
+        t.FromDatetime(datetime.datetime.utcnow() + datetime.timedelta(minutes=timeout))
 
         cir = rsu.CreateInvocationRequest(
                 request_id=str(uuid.uuid4()),
