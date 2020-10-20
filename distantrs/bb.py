@@ -30,10 +30,20 @@ def get_bb_invocation(url):
 
     return ivresp.invocation[0]
 
-def upload_invocation(url, **kwargs):
+def upload_invocation(url, mirror_iid=False, **kwargs):
     bb_i = get_bb_invocation(url)
 
-    i = Invocation(**kwargs, user=bb_i.user, hostname=bb_i.host)
+    if mirror_iid:
+        iid = bb_i.invocation_id
+    else:
+        iid = None
+
+    i = Invocation(
+            **kwargs, 
+            invocation_id=iid,
+            user=bb_i.user, 
+            hostname=bb_i.host
+            )
     i.open()
 
     temp_dir = mkdtemp()
