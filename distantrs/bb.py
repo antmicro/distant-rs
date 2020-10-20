@@ -12,15 +12,19 @@ NOTFOUND = b'record not found\n'
 def get_bb_invocation(url):
     u = urlparse(url)
     suffix = "/".join(list(filter(None, u.path.split("/")[:-2])))
-    rpc_url = "{}://{}".format(
-            u.scheme, 
-            "/".join([u.netloc,suffix,'rpc/BuildBuddyService/GetInvocation'])
-            )
+    rpc_endpoint = 'rpc/BuildBuddyService/GetInvocation'
+
+    if suffix:
+        path = [u.netloc, suffix, rpc_endpoint]
+    else:
+        path = [u.netloc, rpc_endpoint]
+
+    rpc_url = "{}://{}".format(u.scheme, "/".join(path))
 
     ivr = iv.GetInvocationRequest()
     ivr.lookup.invocation_id = url.split("/")[-1]
 
-    r = requests.post(rpc_url, data=ivr.SerializeToString())
+    r = requests.post(rpc_url, data=ivr.SerializeToString(), headers={"Content-Type":"application/proto"})
 
     if r.content == NOTFOUND:
         raise Exception(NOTFOUND.decode())
