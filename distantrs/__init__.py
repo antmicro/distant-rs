@@ -56,7 +56,9 @@ class Invocation:
             project_id=None,
             bucket_name=None,
             invocation_id=None, 
-            auth_token=None
+            auth_token=None,
+            user='distant-rs',
+            hostname=None,
             ):
         self.channel = get_grpcs_channel()
         self.invocation_id = invocation_id or str(uuid.uuid4())
@@ -70,8 +72,8 @@ class Invocation:
         self.storage_client = storage.Client()
         self.bucket = self.storage_client.bucket(self.bucket_name)
 
-        self.user = 'distant-rs'
-        self.hostname = platform.node()
+        self.user = user
+        self.hostname = hostname or platform.node()
 
         self.targets = {}
 
@@ -367,8 +369,9 @@ class Invocation:
 
         return cir_request, ccr_request
 
-    def close(self):
-        self.update_duration()
+    def close(self, update_duration=True):
+        if update_duration:
+            self.update_duration()
 
         fin = rsu.FinalizeInvocationRequest(
                 name=self.invocation_path,
