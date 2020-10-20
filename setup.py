@@ -7,7 +7,12 @@ setuptools.setup(
         author_email="aolech@antmicro.com",
         description="ResultStore client",
         packages=find_packages(),
-        install_requires=["protobuf", "grpcio", "termcolor", "requests"],
+        install_requires=[
+            "protobuf", 
+            "grpcio", 
+            "google-auth",
+            "google-cloud-storage",
+            "requests"
+            ],
         python_requires='>=3.6',
         )
-
