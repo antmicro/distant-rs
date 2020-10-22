@@ -63,6 +63,20 @@ def upload_invocation(url, mirror_iid=False, **kwargs):
     else:
         i.update_status(6)
 
-    i.close()
+    for ev in bb_i.event:
+        b_ev = ev.build_event
+        b_id = b_ev.id.WhichOneof('id')
+
+        close_update_duration = True
+
+        if b_id == 'build_tool_logs':
+            for b_ev_log in b_ev.build_tool_logs.log:
+                if b_ev_log.name == 'elapsed time':
+                    duration = int(b_ev_log.contents.decode())
+                    i.update_duration(duration)
+                    close_update_duration = False
+                    break
+
+    i.close(update_duration=close_update_duration)
 
     return i.invocation_id
