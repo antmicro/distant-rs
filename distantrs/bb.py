@@ -76,7 +76,11 @@ def upload_invocation(url, mirror_iid=False, **kwargs):
                     i.update_duration(duration)
                     close_update_duration = False
                     break
+        elif b_id == 'target_configured':
+            target_name = b_ev.id.target_configured.label
+            i.announce_target(target_name)
+
 
     i.close(update_duration=close_update_duration)
 
-    return i.invocation_id
+    return f'https://source.cloud.google.com/results/invocations/{i.invocation_id}'
