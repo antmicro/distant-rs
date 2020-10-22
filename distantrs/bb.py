@@ -1,4 +1,5 @@
 import requests, shutil, posixpath, os
+from hashlib import sha256
 from tempfile import mkdtemp
 from distantrs import Invocation
 from urllib.parse import urlparse, urlencode
@@ -84,6 +85,8 @@ def upload_invocation(url, mirror_iid=False, **kwargs):
     else:
         i.update_status(6)
 
+    targets = {}
+
     for ev in bb_i.event:
         b_ev = ev.build_event
         b_id = b_ev.id.WhichOneof('id')
@@ -93,14 +96,51 @@ def upload_invocation(url, mirror_iid=False, **kwargs):
         if b_id == 'build_tool_logs':
             for b_ev_log in b_ev.build_tool_logs.log:
                 if b_ev_log.name == 'elapsed time':
-                    duration = int(b_ev_log.contents.decode())
+                    duration = int(float(b_ev_log.contents.decode()))
                     i.update_duration(duration)
                     close_update_duration = False
                     break
         elif b_id == 'target_configured':
-            target_name = b_ev.id.target_configured.label
-            i.announce_target(target_name)
+            target_name = b_ev.id.target_configured.label.replace(" ", "_")
+            targets[target_name] = {
+                    'name':target_name,
+                    'log':'',
+                    'success':False,
+                    'files':[],
+                    'seconds':0,
+                    }
+        elif b_id == 'target_completed':
+            target_name = b_ev.id.target_completed.label.replace(" ", "_")
+            targets[target_name]['success'] = b_ev.completed.success
+            targets[target_name]['files'] = b_ev.completed.important_output
+        elif b_id == 'test_summary':
+            target_name = b_ev.id.test_summary.label.replace(" ", "_")
+            for b_ev_passed in b_ev.test_summary.passed:
+                if b_ev_passed.name == 'test.log':
+                    targets[target_name]['log'] = b_ev_passed.uri
+                    break
+            targets[target_name]['seconds'] = b_ev.test_summary.total_run_duration_millis // 1000
 
+    for t in targets.values():
+        hashed_target_name = sha256(t['name'].encode('utf-8')).hexdigest()[:10]
+        i.announce_target(t['name'])
+
+        if t['log']:
+            test_log_path = posixpath.join(temp_dir, f'test-{hashed_target_name}.log')
+            get_file_from_cas(
+                    invocation_url=url,
+                    bytestream_uri=t['log'],
+                    dl_path=test_log_path,
+                    )
+            i.add_log_to_target(t['name'], test_log_path)
+
+        i.finalize_target(
+                name=t['name'],
+                success=t['success'],
+                seconds=t['seconds'],
+                )
+
+        print(t)
 
     i.close(update_duration=close_update_duration)
 

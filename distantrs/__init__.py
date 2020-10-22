@@ -279,7 +279,7 @@ class Invocation:
 
         return ctr_request, cctr_request, car_request
 
-    def finalize_target(self, name, success):
+    def finalize_target(self, name, success, seconds=None):
         fieldmask = fm.FieldMask()
         fieldmask.paths.MergeFrom(['timing.duration', 'status_attributes.status'])
 
@@ -295,8 +295,12 @@ class Invocation:
         t.status_attributes.status = status_int
         ct.status_attributes.CopyFrom(t.status_attributes)
 
-        t.timing.duration.FromTimedelta(
-                datetime.datetime.utcnow() - t.timing.start_time.ToDatetime())
+        if seconds is None:
+            t.timing.duration.FromTimedelta(
+                    datetime.datetime.utcnow() - t.timing.start_time.ToDatetime())
+        else:
+            t.timing.duration.FromSeconds(seconds)
+
         ct.timing.CopyFrom(t.timing)
 
         mtr = rsu.MergeTargetRequest(
