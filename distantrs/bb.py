@@ -144,4 +144,6 @@ def upload_invocation(url, mirror_iid=False, **kwargs):
 
     i.close(update_duration=close_update_duration)
 
+    shutil.rmtree(temp_dir)
+
     return f'https://source.cloud.google.com/results/invocations/{i.invocation_id}'
