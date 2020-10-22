@@ -1,13 +1,34 @@
-import requests, shutil, posixpath
+import requests, shutil, posixpath, os
 from tempfile import mkdtemp
 from distantrs import Invocation
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 from distantrs.proto.proto import (
         invocation_pb2 as iv, 
         build_event_stream_pb2 as bes
         )
 
 NOTFOUND = b'record not found\n'
+
+def download_file(url, dl_path):
+    with requests.get(url, stream=True) as r:
+        with open(dl_path, 'wb') as f:
+            shutil.copyfileobj(r.raw, f)
+    return dl_path
+
+def get_file_from_cas(invocation_url, bytestream_uri, dl_path):
+    u = urlparse(invocation_url)
+    suffix = "/".join(list(filter(None, u.path.split("/")[:-2])))
+    params = {'filename':os.path.basename(dl_path), 'bytestream_url':bytestream_uri}
+    f_endpoint = 'file/download?' + urlencode(params)
+
+    if suffix:
+        path = [u.netloc, suffix, f_endpoint]
+    else:
+        path = [u.netloc, f_endpoint]
+
+    f_url = "{}://{}".format(u.scheme, "/".join(path))
+
+    return download_file(f_url, dl_path)
 
 def get_bb_invocation(url):
     u = urlparse(url)
