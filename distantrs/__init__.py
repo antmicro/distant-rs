@@ -92,7 +92,7 @@ class Invocation:
             for f in invocation.ListFields():
                 fieldmask.paths.append(f[0].name)
         else:
-            fieldmask.paths.MergeFrom(fieldmask_list)
+            fieldmask.paths.extend(fieldmask_list)
 
         mir = rsu.MergeInvocationRequest(
                 request_id=str(uuid.uuid4()),
@@ -166,7 +166,7 @@ class Invocation:
     def send_file_target(self, target_name, file_name, file_path):
         f_proto = self.__upload_file_gen_proto(f'{target_name}/{file_name}', file_path)
         fieldmask = fm.FieldMask()
-        fieldmask.paths.MergeFrom(['files'])
+        fieldmask.paths.extend(['files'])
 
         a = self.targets[target_name][2]
         a.files.append(f_proto)
@@ -281,7 +281,7 @@ class Invocation:
 
     def finalize_target(self, name, success, seconds=None):
         fieldmask = fm.FieldMask()
-        fieldmask.paths.MergeFrom(['timing.duration', 'status_attributes.status'])
+        fieldmask.paths.extend(['timing.duration', 'status_attributes.status'])
 
         t = self.targets[name][0]
         ct = self.targets[name][1]
