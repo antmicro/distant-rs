@@ -1,4 +1,6 @@
 import grpc, uuid, platform, datetime, requests, os
+import distantrs
+import distantrs.viewer
 import google.auth
 import google.auth.transport.grpc
 import google.auth.transport.requests
@@ -78,6 +80,11 @@ class Invocation:
         self.targets = {}
 
         self.invocation_proto = None
+        # Create this object just in case we need to fetch invocation_proto
+        # in the 'merge()' method instead of 'open()'
+        self.invocation_viewer = distantrs.viewer.InvocationViewer(
+                self.invocation_id, 
+                channel=self.channel)
 
     def __minimal_invocation(self):
         i = inv.Invocation()
@@ -101,6 +108,13 @@ class Invocation:
                 authorization_token=self.auth_token,
                 )
         mir_request = self.stub.MergeInvocation(mir)
+
+        # Normally invocation_proto is populated when 'open()' is called,
+        # but in the case of attaching to an existing invocation
+        # it would be empty, causing AttributeError exception here.
+        # Therefore, if it's None, we fetch it using InvocationViewer.
+        if self.invocation_proto is None:
+            self.invocation_proto = self.invocation_viewer.get_invocation()
         self.invocation_proto.MergeFrom(invocation)
         return mir_request
 

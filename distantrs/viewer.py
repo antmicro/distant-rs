@@ -1,9 +1,8 @@
 import distantrs as drs
-from distantrs import get_grpcs_channel
 
 class InvocationViewer:
-    def __init__(self, invocation_id):
-        self.channel = get_grpcs_channel()
+    def __init__(self, invocation_id, channel=None):
+        self.channel = channel or drs.get_grpcs_channel()
         self.invocation_id = invocation_id
         self.invocation_path = f'invocations/{self.invocation_id}'
         self.stub = drs.rs_grpc.ResultStoreDownloadStub(self.channel)
